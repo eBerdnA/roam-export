@@ -861,3 +861,35 @@ if (process.argv[3] === "--gatsbyFull") {
 
   console.log("Gatsby export completed");
 }
+
+/*
+* Added the following to https://github.com/houshuang/roam-export/blob/master/index.mjs
+*/
+
+if (action === "--foam") {
+  let dir = 'export'
+
+  // Create the output dir if it doesn't exist
+  if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+  }
+
+  pagesRaw.forEach((page) => {
+    // Output with page title for[[wiki-links]] graph view
+    let output = `# ${page.title} \n${processText(pages[page.title])}\n`
+
+    // Add backlinks if the page has them
+    if (linkedReferences[page.title])
+    {
+      output += `
+      
+## Backlinks
+
+${renderLinkedReferences(linkedReferences[page.title])}`
+    }
+
+    fs.writeFileSync(`${dir}/${page.title}.md`, output);
+
+  })
+  console.log(`Exported ${pagesRaw.length} pages`);
+}
