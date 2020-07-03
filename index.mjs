@@ -879,16 +879,23 @@ if (action === "--foam") {
     let output = `# ${page.title} \n${processText(pages[page.title])}\n`
 
     // Add backlinks if the page has them
+    var filename = '';
+    filename = page.title;
+    console.log(page.title.includes('/') + ' - "' + page.title + '"');
+    if (page.title.includes('/')) {
+      let title = page.title.replace('/', '-');
+      filename = title;
+    }
     if (linkedReferences[page.title])
-    {
+    {      
+      // in den linkedReferences muss dann eigentlich auch schon der bereignete Titel sein
       output += `
       
 ## Backlinks
-
 ${renderLinkedReferences(linkedReferences[page.title])}`
     }
-
-    fs.writeFileSync(`${dir}/${page.title}.md`, output);
+    console.log('filename: ' + filename);
+    fs.writeFileSync(`${dir}/${filename}.md`, output);
 
   })
   console.log(`Exported ${pagesRaw.length} pages`);
