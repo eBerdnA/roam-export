@@ -1,8 +1,8 @@
-function sanitizeLink(input) {
+const sanitizeLink = (input) => {
     var tmp = ''
     tmp = input.replace('/', '-');
     tmp = tmp.replace(':', '-');
     return tmp;
 }
 
-module.exports = sanitizeLink;
+exports.sanitizeLink = sanitizeLink;

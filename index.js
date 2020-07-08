@@ -1,9 +1,9 @@
-import util from "util";
-import fs from "fs";
-import chrono from "chrono-node";
-import os from "os";
-import child_process from "child_process";
-import { sanitizeLink } from './helper.js';
+const util = require('util');
+const fs = require('fs');
+const chrono = require('chrono-node');
+const os = require('os');
+const child_process = require('child_process');
+const helper = require('./helper');
 
 util.inspect.defaultOptions.depth = null;
 
@@ -281,7 +281,7 @@ const childrenRecursively = (
           urls[links[0]] = [mdURL.trim(), 0];
         }
         links.forEach((link) => {
-          link = sanitizeLink(link);
+          link = helper.sanitizeLink(link);
           if (!linkedReferences[link]) {
             linkedReferences[link] = [];
           }
