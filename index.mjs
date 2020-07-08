@@ -3,6 +3,7 @@ import fs from "fs";
 import chrono from "chrono-node";
 import os from "os";
 import child_process from "child_process";
+import { sanitizeLink } from './helper.js';
 
 util.inspect.defaultOptions.depth = null;
 
@@ -280,6 +281,7 @@ const childrenRecursively = (
           urls[links[0]] = [mdURL.trim(), 0];
         }
         links.forEach((link) => {
+          link = sanitizeLink(link);
           if (!linkedReferences[link]) {
             linkedReferences[link] = [];
           }
@@ -892,7 +894,7 @@ if (action === "--foam") {
       output += `
       
 ## Backlinks
-${renderLinkedReferences(linkedReferences[page.title])}`
+${renderLinkedReferences(linkedReferences[filename])}`
     }
     console.log('filename: ' + filename);
     fs.writeFileSync(`${dir}/${filename}.md`, output);
