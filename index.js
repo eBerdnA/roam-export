@@ -4,6 +4,7 @@ const chrono = require('chrono-node');
 const os = require('os');
 const child_process = require('child_process');
 const helper = require('./helper');
+const parser = require('./parser');
 
 util.inspect.defaultOptions.depth = null;
 
@@ -120,49 +121,6 @@ const filterBlocks = (blocks) => {
   });
 };
 
-// could probably be done much faster with a proper parser etc, but seems to work
-const getNestedLinks = (text) => {
-  let links = [];
-  let state = "normal"; // 'seenOne'
-  let counter = 0;
-  let currentLinks = [];
-  text.split("").forEach((char) => {
-    currentLinks.forEach((x, i) => (currentLinks[i] += char));
-    if (state === "seenOne" && char !== "[") {
-      state = "normal";
-    }
-    if (state === "seenOneOut" && char !== "]") {
-      state = "normal";
-    }
-    if (char === "[") {
-      counter += 1;
-      if (state === "seenOne") {
-        currentLinks.push("");
-        state = "normal";
-      } else if (state === "normal") {
-        state = "seenOne";
-      }
-    }
-    if (char === "]" && counter > 0) {
-      counter -= 1;
-      if (state === "seenOneOut") {
-        const l = currentLinks.pop();
-        if (l) {
-          links.push(l.slice(0, -2));
-        }
-        state = "normal";
-      } else if (state === "normal") {
-        state = "seenOneOut";
-      }
-
-      if (counter === 0) {
-        state = "normal";
-      }
-    }
-  });
-  return links;
-};
-
 const parseQuery = (text) => {
   text = text.trim();
   if (text[0] === "{") {
@@ -180,7 +138,7 @@ const parseQuery = (text) => {
       if (mode === "normal") {
         mode = "embedded";
         if (res.trim().length > 0) {
-          components = components.concat(getNestedLinks(res));
+          components = components.concat(parser.getNestedLinks(parser.replaceTagsWithLinks(res)));
           index = components.length - 1;
           res = "";
           index += 1;
@@ -206,7 +164,7 @@ const parseQuery = (text) => {
     }
   });
   if (res.length > 0) {
-    components = components.concat(getNestedLinks(res));
+    components = components.concat(parser.getNestedLinks(parser.replaceTagsWithLinks(res)));
   }
   return { [word]: components };
 };
@@ -214,7 +172,7 @@ const parseQuery = (text) => {
 const extractLinks = (text, uid) => {
   let links = [];
   const newText = text.replace("#[[", "[[");
-  links = links.concat(getNestedLinks(newText));
+  links = links.concat(parser.getNestedLinks(parser.replaceTagsWithLinks(newText)));
   newText.replace(/#([a-z0-9_-]+)/g, (_, link) => links.push(link));
   return links;
 };
@@ -259,7 +217,7 @@ const childrenRecursively = (
         });
       }
 
-      const links = extractLinks(child.string, child.uid);
+      const links = extractLinks(parser.replaceTagsWithLinks(child.string), child.uid);
       if (links.includes("private") || links.includes("interval")) {
         return null;
       }
@@ -365,7 +323,7 @@ const processText = (text) => {
   if (!text) {
     return "";
   }
-  return text
+  return parser.replaceTagsWithLinks(text
     .replace(/\{\{embed: \(\((.+?)\)\)\}\}/g, (hit, uid) => {
       if (blocksWithChildren[uid]) {
         return blocksWithChildren[uid][2];
@@ -376,7 +334,7 @@ const processText = (text) => {
         return blocks[uid][0].trim().slice(2);
       }
       return hit;
-    });
+    }));
 };
 
 const trimString = (str, maxLength) => {
